@@ -1,0 +1,13 @@
+Docker
+
+↓
+
+Flask
+
+↓
+
+Postgres
+
+↓
+
+Vue
