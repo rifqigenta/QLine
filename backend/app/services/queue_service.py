@@ -1,6 +1,7 @@
 from datetime import date
 
 from app.core.enums import QueueStatus
+from app.exceptions.errors import NotFoundException
 from app.repositories.queue_repository import QueueRepository
 from app.repositories.shop_repository import ShopRepository
 
@@ -8,41 +9,12 @@ from app.repositories.shop_repository import ShopRepository
 class QueueService:
 
     @staticmethod
-    def _build_queue_status(shop_id, today):
-
-        current = QueueRepository.get_current_queue(
-            shop_id,
-            today,
-        )
-
-        last = QueueRepository.get_last_queue(
-            shop_id,
-            today,
-        )
-
-        current_number = current.queue_number if current else None
-        last_number = last.queue_number if last else 0
-
-        remaining = (
-            last_number - current_number
-            if current_number is not None
-            else last_number
-        )
-
-        return {
-            "current_queue": current_number,
-            "last_queue": last_number,
-            "remaining": remaining,
-            "status": current.status if current else None,
-        }
-
-    @staticmethod
     def take_queue(public_code: str):
 
         shop = ShopRepository.get_by_public_code(public_code)
 
         if shop is None:
-            return None
+            raise NotFoundException("Shop not found")
 
         today = date.today()
 
@@ -72,14 +44,33 @@ class QueueService:
         shop = ShopRepository.get_by_public_code(public_code)
 
         if shop is None:
-            return None
+            raise NotFoundException("Shop not found")
 
         today = date.today()
 
-        return QueueService._build_queue_status(
+        current = QueueRepository.get_current_queue(
             shop.id,
             today,
         )
+
+        last = QueueRepository.get_last_queue(
+            shop.id,
+            today,
+        )
+
+        current_number = current.queue_number if current else None
+        last_number = last.queue_number if last else 0
+        remaining = (
+            last_number - current_number
+            if current_number is not None
+            else last_number
+        )
+
+        return {
+            "current_queue": current_number,
+            "last_queue": last_number,
+            "remaining": remaining,
+        }
 
     @staticmethod
     def next_queue(public_code: str):
@@ -87,7 +78,7 @@ class QueueService:
         shop = ShopRepository.get_by_public_code(public_code)
 
         if shop is None:
-            return None
+            raise NotFoundException("Shop not found")
 
         today = date.today()
 
@@ -109,7 +100,27 @@ class QueueService:
 
         QueueRepository.commit()
 
-        return QueueService._build_queue_status(
+        current = QueueRepository.get_current_queue(
             shop.id,
             today,
         )
+
+        last = QueueRepository.get_last_queue(
+            shop.id,
+            today,
+        )
+
+        current_number = current.queue_number if current else None
+        last_number = last.queue_number if last else 0
+        remaining = (
+            last_number - current_number
+            if current_number is not None
+            else last_number
+        )
+
+        return {
+            "current_queue": current_number,
+            "last_queue": last_number,
+            "remaining": remaining,
+            "status": current.status if current else "EMPTY",
+        }

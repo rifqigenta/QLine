@@ -1,7 +1,7 @@
 from flask import Blueprint
 
 from app.services.queue_service import QueueService
-from app.utils.response import success, error
+from app.utils.response import success
 
 queue_bp = Blueprint(
     "queue",
@@ -9,50 +9,29 @@ queue_bp = Blueprint(
     url_prefix="/api",
 )
 
+
 @queue_bp.post("/shops/<string:public_code>/queue")
 def take_queue(public_code: str):
 
     result = QueueService.take_queue(public_code)
 
-    if result is None:
-        return error(
-            "Shop not found",
-            404,
-        )
-
     return success(
         result,
         status_code=201,
     )
-  
+
+
 @queue_bp.get("/shops/<string:public_code>/queue")
 def get_queue(public_code):
 
     result = QueueService.get_status(public_code)
 
-    if result is None:
-        return error(
-            "Shop not found",
-            404,
-        )
+    return success(result)
 
-    return success(
-        result,
-        status_code=201,
-    )
-  
+
 @queue_bp.post("/shops/<string:public_code>/queue/next")
 def next_queue(public_code):
 
     result = QueueService.next_queue(public_code)
 
-    if result is None:
-        return error(
-            "Shop not found",
-            404,
-        )
-
-    return success(
-        result,
-        status_code=201,
-    )
+    return success(result)
