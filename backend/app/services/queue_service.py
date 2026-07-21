@@ -4,6 +4,7 @@ from app.core.enums import QueueStatus
 from app.exceptions.errors import NotFoundException
 from app.repositories.queue_repository import QueueRepository
 from app.repositories.shop_repository import ShopRepository
+from app.realtime.manager import event_manager
 
 
 class QueueService:
@@ -32,6 +33,13 @@ class QueueService:
 
         QueueRepository.commit()
 
+        status = QueueService._build_queue_status(shop)
+
+        QueueService._broadcast_queue_update(
+            shop.public_code,
+            status,
+        )
+
         return {
             "queue_number": queue.queue_number,
             "status": queue.status,
@@ -46,31 +54,7 @@ class QueueService:
         if shop is None:
             raise NotFoundException("Shop not found")
 
-        today = date.today()
-
-        current = QueueRepository.get_current_queue(
-            shop.id,
-            today,
-        )
-
-        last = QueueRepository.get_last_queue(
-            shop.id,
-            today,
-        )
-
-        current_number = current.queue_number if current else None
-        last_number = last.queue_number if last else 0
-        remaining = (
-            last_number - current_number
-            if current_number is not None
-            else last_number
-        )
-
-        return {
-            "current_queue": current_number,
-            "last_queue": last_number,
-            "remaining": remaining,
-        }
+        return QueueService._build_queue_status(shop)
 
     @staticmethod
     def next_queue(public_code: str):
@@ -100,6 +84,20 @@ class QueueService:
 
         QueueRepository.commit()
 
+        status = QueueService._build_queue_status(shop)
+
+        QueueService._broadcast_queue_update(
+            shop.public_code,
+            status,
+        )
+
+        return status
+
+    @staticmethod
+    def _build_queue_status(shop):
+
+        today = date.today()
+
         current = QueueRepository.get_current_queue(
             shop.id,
             today,
@@ -112,6 +110,7 @@ class QueueService:
 
         current_number = current.queue_number if current else None
         last_number = last.queue_number if last else 0
+
         remaining = (
             last_number - current_number
             if current_number is not None
@@ -124,3 +123,18 @@ class QueueService:
             "remaining": remaining,
             "status": current.status if current else "EMPTY",
         }
+
+    @staticmethod
+    def _broadcast_queue_update(
+        public_code: str,
+        status: dict,
+    ):
+
+        event_manager.publish(
+            public_code,
+            {
+                "type": "queue_updated",
+                "shop": public_code,
+                **status,
+            },
+        )

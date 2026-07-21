@@ -1,27 +1,53 @@
+from collections import defaultdict
 from queue import Queue
+from threading import Lock
 
 
 class EventManager:
 
     def __init__(self):
-        self.clients = []
+        self.clients = defaultdict(list)
+        self.lock = Lock()
 
-    def subscribe(self):
+    def subscribe(
+        self,
+        public_code: str,
+    ):
 
         q = Queue()
 
-        self.clients.append(q)
+        with self.lock:
+            self.clients[public_code].append(q)
 
         return q
 
-    def unsubscribe(self, q):
+    def unsubscribe(
+        self,
+        public_code: str,
+        q,
+    ):
 
-        if q in self.clients:
-            self.clients.remove(q)
+        with self.lock:
 
-    def publish(self, data):
+            if q in self.clients[public_code]:
+                self.clients[public_code].remove(q)
 
-        for client in self.clients:
+            if not self.clients[public_code]:
+                del self.clients[public_code]
+
+    def publish(
+        self,
+        public_code: str,
+        data: dict,
+    ):
+
+        with self.lock:
+
+            clients = list(
+                self.clients.get(public_code, [])
+            )
+
+        for client in clients:
             client.put(data)
 
 

@@ -11,24 +11,34 @@ events_bp = Blueprint(
 
 @events_bp.get("/shops/<string:public_code>/events")
 def events(public_code):
+    print(">>> EVENTS ENDPOINT HIT:", public_code)
 
     def stream():
+        
+        print(">>> CLIENT SUBSCRIBED")
 
-        q = event_manager.subscribe()
+        q = event_manager.subscribe(public_code)
 
         try:
 
             while True:
 
                 data = q.get()
+                
+                print(">>> SEND EVENT:", data)
 
                 yield (
                     f"data: {json.dumps(data)}\n\n"
                 )
 
         finally:
+            
+            print(">>> CLIENT DISCONNECTED")
 
-            event_manager.unsubscribe(q)
+            event_manager.unsubscribe(
+                public_code,
+                q,
+            )
 
     return Response(
         stream(),
