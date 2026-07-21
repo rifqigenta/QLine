@@ -1,8 +1,8 @@
-"""create initial schema
+"""initial schema
 
-Revision ID: 45ac6c3034aa
+Revision ID: 1dc6d4148300
 Revises: 
-Create Date: 2026-07-21 15:12:58.873907
+Create Date: 2026-07-21 17:39:41.346790
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '45ac6c3034aa'
+revision = '1dc6d4148300'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -36,15 +36,14 @@ def upgrade():
     op.create_table('queues',
     sa.Column('shop_id', sa.UUID(), nullable=False),
     sa.Column('queue_number', sa.Integer(), nullable=False),
-    sa.Column('device_id', sa.String(length=100), nullable=False),
+    sa.Column('device_id', sa.String(length=64), nullable=True),
     sa.Column('queue_date', sa.Date(), nullable=False),
-    sa.Column('status', sa.Enum('WAITING', 'CALLING', 'DONE', name='queuestatus'), nullable=False),
+    sa.Column('status', sa.String(length=20), nullable=False),
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['shop_id'], ['shops.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('shop_id', 'device_id', 'queue_date', name='uq_queue_device_per_day')
+    sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('queues', schema=None) as batch_op:
         batch_op.create_index('ix_queue_shop_date', ['shop_id', 'queue_date'], unique=False)

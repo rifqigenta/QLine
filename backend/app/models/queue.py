@@ -8,7 +8,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.extensions import db
 from app.models.base import TimestampMixin, UUIDMixin
-from app.models.enums import QueueStatus
+# from app.models.enums import QueueStatus
+from app.core.enums import QueueStatus
 from sqlalchemy import UniqueConstraint, Index
 
 
@@ -16,12 +17,6 @@ class Queue(db.Model, UUIDMixin, TimestampMixin):
     __tablename__ = "queues"
     
     __table_args__ = (
-      UniqueConstraint(
-          "shop_id",
-          "device_id",
-          "queue_date",
-          name="uq_queue_device_per_day",
-      ),
       Index(
           "ix_queue_shop_date",
           "shop_id",
@@ -39,9 +34,9 @@ class Queue(db.Model, UUIDMixin, TimestampMixin):
         nullable=False,
     )
 
-    device_id: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
+    device_id: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
     )
 
     queue_date: Mapped[datetime.date] = mapped_column(
@@ -49,9 +44,10 @@ class Queue(db.Model, UUIDMixin, TimestampMixin):
         nullable=False,
     )
 
-    status: Mapped[QueueStatus] = mapped_column(
-        Enum(QueueStatus),
-        default=QueueStatus.WAITING,
+    status: Mapped[str] = mapped_column(
+        # Enum(QueueStatus),
+        String(20),
+        default=QueueStatus.WAITING.value,
         nullable=False,
     )
 
