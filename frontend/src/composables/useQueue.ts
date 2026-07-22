@@ -31,5 +31,7 @@ export function useQueue() {
     fetchQueue: store.fetchQueue,
 
     takeQueue: store.takeQueue,
+
+    setQueue: store.setQueue,
   }
 }

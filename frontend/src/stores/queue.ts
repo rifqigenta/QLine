@@ -31,5 +31,12 @@ export const useQueueStore = defineStore('queue', {
 
       await this.fetchQueue(publicCode)
     },
+
+    // applyRealtimeUpdate(data: QueueStatus) {
+    //   this.queue = data
+    // },
+    setQueue(queue: QueueStatus) {
+      this.queue = queue
+    },
   },
 })

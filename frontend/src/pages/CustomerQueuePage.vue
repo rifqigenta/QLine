@@ -7,15 +7,26 @@ import BaseContainer from '@/components/base/BaseContainer.vue'
 import BasePage from '@/components/base/BasePage.vue'
 import AppHeader from '@/components/layouts/AppHeader.vue'
 import QueueInfoCard from '@/components/queue/QueueInfoCard.vue'
+import { useQueueEvents } from '@/composables/useQueueEvents'
 
 import { useQueue } from '@/composables/useQueue'
 
-const { currentQueue, lastQueue, remaining, myQueue, loading, fetchQueue, takeQueue } = useQueue()
+const { currentQueue, lastQueue, remaining, myQueue, loading, fetchQueue, takeQueue, setQueue } =
+  useQueue()
 
 const PUBLIC_CODE = 'A7XK29P4'
 
 onMounted(() => {
   fetchQueue(PUBLIC_CODE)
+})
+
+useQueueEvents(PUBLIC_CODE, (event) => {
+  setQueue({
+    current_queue: event.current_queue,
+    last_queue: event.last_queue,
+    remaining: event.remaining,
+    status: event.status,
+  })
 })
 
 function handleTakeQueue() {
