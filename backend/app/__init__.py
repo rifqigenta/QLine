@@ -12,8 +12,22 @@ from app.core.config import Config
 from app.core.extensions import db, migrate, jwt
 from app.exceptions import register_error_handlers
 
+from flask_cors import CORS
+
 def create_app() -> Flask:
     app = Flask(__name__)
+    
+    CORS(
+        app,
+        resources={
+            r"/api/*": {
+                "origins": "http://localhost:5173",
+            },
+            r"/shops/*": {
+                "origins": "http://localhost:5173",
+            },
+        },
+    )
 
     app.config.from_object(Config)
 
